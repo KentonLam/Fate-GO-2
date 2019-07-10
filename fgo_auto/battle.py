@@ -1,5 +1,7 @@
-from .actions import *
 import pyautogui
+
+from .actions import *
+from .cards import *
 
 def update_supports():
     while True:
@@ -70,8 +72,6 @@ def auto_battle(supports, all_skills):
 
     wait_img('attack')
     retake_img('-battle-num')
-
-    return
 
     wave = 0
     while True:

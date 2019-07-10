@@ -32,14 +32,14 @@ def grid_screenshot():
     return img2
 
 def crop_snapshot(name, img):
-    snapshot = input(f'{name} position: >>> ')
+    snapshot = input(f'[{name}] position: >>> ')
     snapshot = tuple(map(int, snapshot.strip().split()))
     snapshot2 = list(snapshot)
     snapshot2[2] += snapshot[0]
     snapshot2[3] += snapshot[1]
     snapshot2 = tuple(snapshot2)
 
-    search = input(f'{name} search box? >>> ').strip()
+    search = input(f'[{name}] search box? >>> ').strip()
     if not search:
         buffer = 10
         search = [snapshot[0]-buffer, snapshot[1]-buffer, snapshot[2]+2*buffer, snapshot[3]+2*buffer]

@@ -41,7 +41,7 @@ def locate(img_data, **kwargs):
     # pos[3] += pos[1]
     # print(pos)
     print(img_data)
-    result = (pyautogui.locateOnScreen(img_data.file, confidence=0.90, **kwargs))
+    result = (pyautogui.locateOnScreen(img_data.file, confidence=0.90, region=pos, **kwargs))
     print('    ', result)
     return result
 

@@ -1,6 +1,7 @@
 import pyautogui
 import cv2
 
+import time
 from collections import namedtuple
 
 from .config import *
@@ -33,15 +34,17 @@ def retake_cards(template=False):
         bottoms.append(cv2.imread(f'images/-card-bottom-{i}.png'))
     return tops, bottoms
 
+BAQ = ('buster', 'arts', 'quick')
+
 templates = {
     t: cv2.imread(f'images/card-{t}.png') 
-    for t in ('buster', 'arts', 'quick')
+    for t in BAQ
 }
 
 def similarity(haystack, needle):
     return cv2.matchTemplate(haystack, needle, cv2.TM_CCOEFF_NORMED).max()
 
-Card = namedtuple('Card', 'type servant')
+Card = namedtuple('Card', 'pos type servant')
 
 def analyse_cards():
     tops, bottoms = retake_cards()
@@ -57,7 +60,7 @@ def analyse_cards():
         if not servant_groups:
             servant_groups.append([top, []])
         val, servants = max( (similarity(img, top[5:-5,5:-5]), servants) for img, servants in servant_groups)
-        if val > 0.9:
+        if val > 0.85:
             servants.append(i)
         else:
             servant_groups.append([top, [i]])
@@ -69,9 +72,35 @@ def analyse_cards():
         
     cards = []
     for i in range(5):
-        cards.append(Card(types[i], servants[i]))
+        cards.append(Card(i, types[i], servants[i]))
     return cards
 
 
+
+def use_cards(num=3, order='baq', alternate=False):
+    # lower score = better
+    weights = {t: (order.index(t[0])+1)*100 for t in BAQ}
+
+    prev_servant = None
+    def sort_key(card):
+        w =  weights[card.type]
+        if alternate and card.servant == prev_servant:
+            w += 1000
+        return w
+        
+    cards = list(analyse_cards())
+    selected = []
+    for i in range(num):
+        cards.sort(key=sort_key, reverse=True)
+        card = cards.pop()
+        selected.append(card)
+        prev_servant = card.servant
+    
+    for card in selected:
+        pyautogui.click(*pyautogui.center(g_to_s(CARD_TOPS[card.pos])))
+        time.sleep(0.2)
+    
+    return selected
+
 if __name__ == '__main__':
-    print(analyse_cards())
+    print(use_cards(3, 'abq', True))
