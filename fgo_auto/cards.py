@@ -75,8 +75,6 @@ def analyse_cards():
         cards.append(Card(i, types[i], servants[i]))
     return cards
 
-
-
 def use_cards(num=3, order='baq', alternate=False):
     # lower score = better
     weights = {t: (order.index(t[0])+1)*100 for t in BAQ}
@@ -88,6 +86,7 @@ def use_cards(num=3, order='baq', alternate=False):
             w += 1000
         return w
 
+    print('looking for cards...')
     cards = list(analyse_cards())
     print('cards:', cards)
     selected = []
