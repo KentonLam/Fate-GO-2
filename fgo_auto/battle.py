@@ -40,7 +40,7 @@ def battle_wave(wave_skills):
             skills = 'atk'
         else:
             skills = wave_skills[turn].strip()
-        if wait_many_img(['attack', 'servant-bond'])[0] == 'servant-bond':
+        if wait_many_img(['attack', 'servant-bond', 'bond-up'])[0] != 'attack':
             return False
         if test_changed_img('-battle-num', True):
             return True
@@ -53,17 +53,21 @@ _coords = lambda y, xs: [(x, y) for x in xs]
 SKILLS = {
     'atk': None,
     'np': _coords(200, [425, 650, 900]),
+    'swap': _coords(350, [150, 350, 550, 750, 950, 1150]) + [(600, 625)], # swap0 is the ok button
     'm': _coords(300, [900, 1000, 1080]),
     's': _coords(400, [300, 650, 950]),
+    't': _coords(40, [50, 280, 525]),
     '': _coords(575, [75, 160, 260, 390, 480, 575, 700, 800, 900])
 }
 
 SEQUENCES = {
     'atk': ('sleep:0.5', 'c:attack', ),
     'np': ('w:back', 'sleep:0.5', 'click:i'),
+    'swap': ('w:swap-x', 'click:i'),
     'm': ('w:attack', 'c:master-skill', 'sleep:0.5', 'click:i'),
     's': ('w:skill-x', 'click:i'),
-    '': ('w:attack', 'click:i', 'sleep:0.5'),
+    't': ('w:attack', 'click:i'),
+    '': ('w:attack', 'click:i', 'sleep:0.3'),
 }
 
 ACTIONS = {
@@ -80,6 +84,7 @@ def exec_sequence(arg, seq, positions):
         else:
             index = int(option) if option != 'i' else (int(arg)-1)
             click(positions[index])
+        time.sleep(0.1)
 
 def apply_skills(skills):
     """
@@ -98,6 +103,11 @@ def apply_skills(skills):
 
 def auto_battle(supports, all_skills):
     click_wait_img('previous')
+
+    while wait_many_img(('restore-ap', 'update'))[0] == 'restore-ap':
+        print('no ap')
+        return
+
     find_support(supports)
     click_wait_img('start-quest')
 
@@ -128,6 +138,7 @@ def main():
     auto_battle(
         supports=['mona-lisa-mlb'],
         all_skills=['1 3 4 6 m2 s2 atk np2', '2 atk np1', '8 9 atk np3']
+        # all_skills=['t2 m3 swap2 swap5 swap0 atk', '2 atk np1', '8 9 atk np3']
     )
     pass
 
