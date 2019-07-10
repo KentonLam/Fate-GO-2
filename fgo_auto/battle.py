@@ -31,39 +31,70 @@ def find_support(supports, max_scrolls=3):
 def battle_wave(wave_skills):
     wave_skills = wave_skills.split(';')
     turn = 0
+    wait_img('attack')
+    retake_img('-battle-num')
     while True:
+        print('-'*20)
+        print('Turn', turn)
         if turn >= len(wave_skills):
-            skills = ''
+            skills = 'atk'
         else:
-            skills = wave_skills[turn]
+            skills = wave_skills[turn].strip()
+        if wait_many_img(['attack', 'servant-bond'])[0] == 'servant-bond':
+            return False
+        if test_changed_img('-battle-num', True):
+            return True
         apply_skills(skills)
-        click_wait_img('attack')
+        use_cards(3, 'abq', alternate=1)
         turn += 1
 
-SKILLS_X = [75, 160, 260, 390, 480, 575, 700, 800, 900]
-SKILLS_Y = [575]*9
-SKILLS = tuple(zip(SKILLS_X, SKILLS_Y))
+_coords = lambda y, xs: [(x, y) for x in xs]
 
-M_SKILLS_X = [900, 1000, 1080]
-M_SKILLS_Y = [300]*3
-M_SKILLS = tuple(zip(M_SKILLS_X, M_SKILLS_Y))
+SKILLS = {
+    'atk': None,
+    'np': _coords(200, [425, 650, 900]),
+    'm': _coords(300, [900, 1000, 1080]),
+    's': _coords(400, [300, 650, 950]),
+    '': _coords(575, [75, 160, 260, 390, 480, 575, 700, 800, 900])
+}
+
+SEQUENCES = {
+    'atk': ('sleep:0.5', 'c:attack', ),
+    'np': ('w:back', 'sleep:0.5', 'click:i'),
+    'm': ('w:attack', 'c:master-skill', 'sleep:0.5', 'click:i'),
+    's': ('w:skill-x', 'click:i'),
+    '': ('w:attack', 'click:i', 'sleep:0.5'),
+}
+
+ACTIONS = {
+    'w': wait_img,
+    'c': click_wait_img,
+    'sleep': lambda s: time.sleep(float(s))
+}
+
+def exec_sequence(arg, seq, positions):
+    for a in seq:
+        code, option = a.split(':')
+        if code != 'click':
+            ACTIONS[code](option)
+        else:
+            index = int(option) if option != 'i' else (int(arg)-1)
+            click(positions[index])
 
 def apply_skills(skills):
     """
     1-9 are normal skills.
+    m1-3 are master skills.
+    s1-3 selects allied targets.
+    t1-3 selects targets.
     """
     for s in skills.split():
-        wait_img('attack')
-        if not s.strip(): continue
-        if s.startswith('m'):
-            num = int(s[1:])
-            click_wait_img('master-skill')
-            positions = M_SKILLS
-        else:
-            num = int(s)
-            positions = SKILLS
-        click(positions[num-1])
-    wait_img('attack')
+        s = s.strip()
+        if not s: continue
+        for prefix, positions in SKILLS.items():
+            if not s.startswith(prefix): continue
+            exec_sequence(s[len(prefix):], SEQUENCES[prefix], positions)
+            break
 
 def auto_battle(supports, all_skills):
     click_wait_img('previous')
@@ -75,17 +106,28 @@ def auto_battle(supports, all_skills):
 
     wave = 0
     while True:
+        print('='*20)
+        print('Wave', wave)
         if wave >= len(all_skills):
             skills = ''
         else:
             skills = all_skills[wave]
-        battle_wave(skills)
+        if not battle_wave(skills): break
         wave += 1
+
+    while True:
+        if click_img('next'): break
+        click((1250, 10))
+        time.sleep(1)
+    
+    wait_img('menu')
+
+    print('done')
 
 def main():
     auto_battle(
-        supports=['lunchtime-mlb'],
-        all_skills=['1 2; 3']
+        supports=['mona-lisa-mlb'],
+        all_skills=['1 3 4 6 m2 s2 atk np2', '2 atk np1', '8 9 atk np3']
     )
     pass
 

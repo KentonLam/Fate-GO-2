@@ -87,8 +87,9 @@ def use_cards(num=3, order='baq', alternate=False):
         if alternate and card.servant == prev_servant:
             w += 1000
         return w
-        
+
     cards = list(analyse_cards())
+    print('cards:', cards)
     selected = []
     for i in range(num):
         cards.sort(key=sort_key, reverse=True)
@@ -99,7 +100,7 @@ def use_cards(num=3, order='baq', alternate=False):
     for card in selected:
         pyautogui.click(*pyautogui.center(g_to_s(CARD_TOPS[card.pos])))
         time.sleep(0.2)
-    
+    print('selected:', selected)
     return selected
 
 if __name__ == '__main__':

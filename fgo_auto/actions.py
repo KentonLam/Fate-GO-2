@@ -26,13 +26,16 @@ def retake_img(name):
     img = IMAGES[name]
     pyautogui.screenshot(img.file, g_to_s(img.position))
 
-def test_changed_img(name):
+def test_changed_img(name, gray=False):
     img = IMAGES[name]
     old = cv2.imread(img.file).copy()
     retake_img(name)
     new = cv2.imread(img.file).copy()
+    if gray:
+        old = cv2.cvtColor(old, cv2.COLOR_RGB2GRAY) 
+        new = cv2.cvtColor(new, cv2.COLOR_RGB2GRAY) 
     similar = abs(float(cv2.matchTemplate(old, new, cv2.TM_CCOEFF_NORMED)))
-    return similar < 0.5 
+    return similar < 0.8
 
 def locate(img_data, **kwargs):
     pos = list(img_data.position)
@@ -40,17 +43,21 @@ def locate(img_data, **kwargs):
     # pos[2] += pos[0]
     # pos[3] += pos[1]
     # print(pos)
-    print(img_data)
     result = (pyautogui.locateOnScreen(img_data.file, confidence=0.90, region=pos, **kwargs))
-    print('    ', result)
     return result
 
-def wait_img(name):
-    assert name in IMAGES
+def wait_many_img(names):
+    print('wait_many_img', names)
     while True:
-        result = locate(IMAGES[name])
-        if result: return result
-        time.sleep(0.5)
+        for name in names:
+            result = locate(IMAGES[name])
+            if result: 
+                return name, result
+        time.sleep(0.8)
+
+def wait_img(name):
+    return wait_many_img((name, ))[1]
+
 
 def click_wait_img(name):
     pyautogui.click(pyautogui.center(wait_img(name)))

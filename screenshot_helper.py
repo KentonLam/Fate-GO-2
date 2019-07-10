@@ -4,7 +4,7 @@ from PIL import Image, ImageDraw
 import time
 import os
 
-from fgo_auto import FULL_GAME, GAME_HEIGHT, GAME_WIDTH
+from fgo_auto.config import FULL_GAME, GAME_HEIGHT, GAME_WIDTH
 
 def screenshot(filename, position):
     print(f'Taking screenshot {filename} at {position}.')
