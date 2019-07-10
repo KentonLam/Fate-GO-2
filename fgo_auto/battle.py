@@ -1,9 +1,18 @@
 import pyautogui
 
+from .logging import *
 from .actions import *
 from .cards import *
 
 _coords = lambda y, xs: [(x, y) for x in xs]
+
+logger = get_logger(__name__)
+
+APPLES = {
+    'gold': (400, 300),
+    'silver': (400, 450),
+    'bronze': (400, 565)
+}
 
 SKILLS = {
     'atk': None,
@@ -32,6 +41,7 @@ ACTIONS = {
 }
 
 def exec_skill_seq(arg, seq, positions):
+    logger.debug('skill sequence: %s, i=%s', seq, arg)
     for a in seq:
         code, option = a.split(':')
         if code != 'click':
@@ -48,6 +58,7 @@ def apply_turn_skills(skills):
     s1-3 selects allied targets.
     t1-3 selects targets.
     """
+    logger.debug('skills for this turn: %s', skills)
     for s in skills.split():
         s = s.strip()
         if not s: continue
@@ -58,6 +69,7 @@ def apply_turn_skills(skills):
 
 def update_supports():
     while True:
+        l.info('updating supports')
         click_wait_img('update')
         wait_img('update-friend-list')
 
@@ -66,12 +78,14 @@ def update_supports():
         click_wait_img('update-close')
 
 class AutoBattle:
-    def __init__(self, *, supports=None, max_scrolls=3, skills=(), card_order='baq', card_alternate=False):
+    def __init__(self, *, supports=None, max_scrolls=3, skills=(), card_order='baq', card_alternate=False,
+            apples=()):
         self.supports = supports 
         self.max_scrolls = max_scrolls
         self.skills = skills 
         self.card_order = card_order 
         self.card_alternate = card_alternate
+        self.apples = apples
 
         self.w_num = 0 
         self.w_turn = 0
@@ -103,8 +117,7 @@ class AutoBattle:
         wait_img('attack')
         retake_img('-battle-num')
         while True:
-            print('-'*20)
-            print('Battle', self.w_num, 'turn', self.w_turn)
+            logger.info('Battle %d, turn %d', self.w_num, self.w_turn)
             if self.w_turn >= len(wave_skills):
                 skills = ''
             else:
@@ -125,47 +138,57 @@ class AutoBattle:
 
     def start_battle(self):
         click_wait_img('previous')
-        while wait_many_img(('restore-ap', 'update'))[0] == 'restore-ap':
-            print('no ap')
-            return
+        if wait_many_img(('restore-ap', 'update'))[0] == 'restore-ap':
+            used_apple = False
+            for apple_type in self.apples:
+                click(APPLES[apple_type])
+                if click_wait_many_img(('apple-ok', ))[0] == 'apple-ok':
+                    used_apple = True
+                    break 
+                time.sleep(1)
+            if not used_apple:
+                raise RuntimeError('no ap and no apples')
         self.find_support()
         click_wait_img('start-quest')
 
     def do_battle(self, wave=0, turn=0):
         self.w_num = wave 
         self.w_turn = turn
-
+        l.info('starting main battle')
         wait_img('attack')
         retake_img('-battle-num')
 
         while True:
-            print('='*20)
-            print('Wave', self.w_num)
+            logger.info('Starting battle %d', self.w_num)
             if not self.battle_wave(): 
                 break
             self.w_num += 1
             self.w_turn = 0
 
     def end_battle(self):
+        l.info('finishing battle')
         while True:
             name, pos = find_many_img(('next', 'close', 'friend-no', 'menu'))
             if name == 'menu': break
             if pos:
                 pyautogui.click(*pyautogui.center(pos))
+                l.debug('found and clicked on %s', name)
             else:
                 click((1000, 10))
             time.sleep(1)
         
         wait_img('menu')
-
-        print('done')
+        logger.info('Ended battle.')
 
     def run_once(self):
+        logger.info('Starting run.')
         start = time.time()
-        self.start_battle()
+        self.start_battle() 
         self.do_battle()
         self.end_battle()
-        return time.time() - start
+        taken = time.time() - start
+        logger.info('Run ended, took %f seconds.', taken)
+        return taken
 
 
 def main():
@@ -174,9 +197,10 @@ def main():
         skills=['1 3 4 6 m2 s2 atk np2', '2 atk np1', '8 9 atk np3'],
         # skills=['t2 m3 swap2 swap5 swap0 atk', '2 atk np1', '8 9 atk np3']
         card_order='aqb',
-        card_alternate=1
+        card_alternate=1,
+        apples=('bronze', )
     )
-    battle.do_battle()
+    battle.run_once()
 
 if __name__ == '__main__':
     main()

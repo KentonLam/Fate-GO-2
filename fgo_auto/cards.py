@@ -6,6 +6,9 @@ from collections import namedtuple
 
 from .config import *
 from .actions import *
+from .logging import *
+
+l = get_logger(__name__)
 
 CARDS_Y = [450]*5
 CARDS_X = [52, 307, 562, 820, 1080]
@@ -21,6 +24,7 @@ CARD_BOTTOMS_SEARCH = [(x-25, y-10, 150, 60) for x, y, w, h in CARD_BOTTOMS]
 
 def retake_cards(template=False):
     wait_img('back')
+    l.debug('screenshotting cards...')
     tops = []
     bottoms = []
     for i, c in enumerate(CARD_TOPS):
@@ -76,6 +80,7 @@ def analyse_cards():
     return cards
 
 def use_cards(num=3, order='baq', alternate=False):
+    start = time.time()
     # lower score = better
     weights = {t: (order.index(t[0])+1)*100 for t in BAQ}
 
@@ -86,9 +91,8 @@ def use_cards(num=3, order='baq', alternate=False):
             w += 1000
         return w
 
-    print('looking for cards...')
     cards = list(analyse_cards())
-    print('cards:', cards)
+    l.debug('cards: %s', cards)
     selected = []
     for i in range(num):
         cards.sort(key=sort_key, reverse=True)
@@ -99,7 +103,8 @@ def use_cards(num=3, order='baq', alternate=False):
     for card in selected:
         pyautogui.click(*pyautogui.center(g_to_s(CARD_TOPS[card.pos])))
         time.sleep(0.2)
-    print('selected:', selected)
+    l.info('clicking: %s', selected)
+    l.debug('using cards took %f', start - time.time())
     return selected
 
 if __name__ == '__main__':
