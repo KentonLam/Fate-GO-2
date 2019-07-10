@@ -41,10 +41,14 @@ def battle_wave(wave_skills):
         else:
             skills = wave_skills[turn].strip()
         if wait_many_img(['attack', 'servant-bond', 'bond-up'])[0] != 'attack':
-            return False
+            return False # battle finished.
         if test_changed_img('-battle-num', True):
-            return True
+            return True # wave finished but continue.
         apply_skills(skills)
+        name, pos = wait_many_img(['attack', 'back'])
+        if name == 'attack':
+            pyautogui.click(*pyautogui.center(pos))
+            time.sleep(0.2)
         use_cards(3, 'abq', alternate=1)
         turn += 1
 
@@ -126,8 +130,12 @@ def auto_battle(supports, all_skills):
         wave += 1
 
     while True:
-        if click_img('next'): break
-        click((1250, 10))
+        name, pos = find_many_img(('next', 'close', 'friend-no', 'menu'))
+        if name == 'menu': break
+        if pos:
+            pyautogui.click(*pyautogui.center(pos))
+        else:
+            click((1250, 10))
         time.sleep(1)
     
     wait_img('menu')

@@ -49,11 +49,15 @@ def locate(img_data, **kwargs):
 def wait_many_img(names):
     print('wait_many_img', names)
     while True:
-        for name in names:
-            result = locate(IMAGES[name])
-            if result: 
-                return name, result
+        result = find_many_img(names)
+        if result[1]: 
+            return result
         time.sleep(0.8)
+
+def click_wait_many_img(names):
+    name, pos = wait_many_img(names)
+    pyautogui.click(*center(pos))
+    return name, pos
 
 def wait_img(name):
     return wait_many_img((name, ))[1]
@@ -64,6 +68,13 @@ def click_wait_img(name):
 
 def find_img(name):
     return locate(IMAGES[name])
+
+def find_many_img(names):
+    for name in names:
+        pos = locate(IMAGES[name])
+        if pos: 
+            return name, pos
+    return None, None
 
 def click_img(name):
     pos = locate(IMAGES[name])
