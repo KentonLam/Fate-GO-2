@@ -43,6 +43,16 @@ def test_changed_img(name, gray=False):
     similar = abs(float(cv2.matchTemplate(old, new, cv2.TM_CCOEFF_NORMED)))
     return similar < 0.8
 
+def test_mlb(region):
+    region = list(region)
+    region[0] = region[0] + region[2] - 40
+    region[2] = 40
+    region[1] = region[1] + region[3] - 30
+    region[3] = 30
+    l.debug('testing mlb at %s', region)
+    pos = (pyautogui.locateOnScreen('images/mlb.png', confidence=0.8, region=region, grayscale=True))
+    return pos
+
 def locate(img_data, **kwargs):
     pos = list(img_data.position)
     pos = g_to_s(pos)

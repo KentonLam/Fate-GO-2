@@ -78,7 +78,7 @@ def update_supports():
         click_wait_img('update-close')
 
 class AutoBattle:
-    def __init__(self, *, supports=None, max_scrolls=3, skills=(), card_order='baq', card_alternate=False,
+    def __init__(self, *, supports=None, max_scrolls=5, skills=(), card_order='baq', card_alternate=False,
             apples=()):
         self.supports = supports 
         self.max_scrolls = max_scrolls
@@ -96,9 +96,11 @@ class AutoBattle:
             wait_img('update')
 
             for sup in self.supports:
-                found = click_img(sup)
-                if found:
+                found = find_img(sup)
+                if found and (not sup.endswith('-mlb') or test_mlb(found)):
+                    pyautogui.click(*pyautogui.center(found))
                     return
+            raise 2
             if scrolls >= self.max_scrolls:
                 update_supports()
                 scrolls = 0
@@ -180,7 +182,9 @@ class AutoBattle:
         wait_img('menu')
         logger.info('Ended battle.')
 
-    def run_once(self):
+    def run_once(self, wave=0, turn=0):
+        self.w_num = wave
+        self.w_turn = turn
         logger.info('Starting run.')
         start = time.time()
         self.start_battle() 
@@ -193,14 +197,14 @@ class AutoBattle:
 
 def main():
     battle = AutoBattle(
-        supports=['mona-lisa-mlb'],
+        supports=['lunchtime-mlb'],
         skills=['1 3 4 6 m2 s2 atk np2', '2 atk np1', '8 9 atk np3'],
         # skills=['t2 m3 swap2 swap5 swap0 atk', '2 atk np1', '8 9 atk np3']
         card_order='aqb',
         card_alternate=1,
         apples=('bronze', )
     )
-    battle.run_once()
+    battle.find_support()
 
 if __name__ == '__main__':
     main()

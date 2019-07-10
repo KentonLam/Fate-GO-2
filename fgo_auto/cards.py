@@ -104,7 +104,7 @@ def use_cards(num=3, order='baq', alternate=False):
         pyautogui.click(*pyautogui.center(g_to_s(CARD_TOPS[card.pos])))
         time.sleep(0.2)
     l.info('clicking: %s', selected)
-    l.debug('using cards took %f', start - time.time())
+    l.debug('using cards took %f', time.time() - start)
     return selected
 
 if __name__ == '__main__':
